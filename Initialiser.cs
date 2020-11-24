@@ -2,7 +2,6 @@ using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
 using OtterBot.Repository;
 using OtterBot.Handlers;
 using SimpleInjector;
@@ -11,9 +10,9 @@ using System.Threading.Tasks;
 
 namespace OtterBot
 {
-    public class Initialize
+    public class Initialiser
     {
-        public static async Task<DiscordSocketClient> GetClient(IConfigurationRoot config)
+        public static async Task<DiscordSocketClient> InitialiseDiscordClient(IConfigurationRoot config)
         {
             var token = config["Token"];
             var discordConfig = new DiscordSocketConfig { MessageCacheSize = 100 };
@@ -24,13 +23,8 @@ namespace OtterBot
             return client;
         }
 
-        public static IServiceProvider BuildServiceProvider(DiscordSocketClient client, CommandService commands, Container container, IConfigurationRoot config)
+        public static IServiceProvider InitialiseContainer(DiscordSocketClient client, CommandService commands, Container container, IConfigurationRoot config)
         {
-            var provider = new ServiceCollection()
-                    .AddSimpleInjector(container)
-                    .BuildServiceProvider(validateScopes: true)
-                    .UseSimpleInjector(container);
-
             container.RegisterInstance(client);
             container.RegisterInstance(commands);
             container.RegisterInstance(config);
@@ -41,9 +35,10 @@ namespace OtterBot
             container.RegisterSingleton(typeof(ICosmos<>), typeof(Cosmos<>));
 
             container.Verify();
-            return provider;
+            return container;
         }
 
+        // Do something proper with the logs in the future
         private static Task Log(LogMessage message)
         {
             Console.WriteLine(message.ToString());

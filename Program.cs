@@ -21,8 +21,8 @@ namespace OtterBot
 
                 var config = builder.Build();
 
-                client = await Initialize.GetClient(config);
-                Initialize.BuildServiceProvider(client, new(), container, config);
+                client = await Initialiser.InitialiseDiscordClient(config);
+                Initialiser.InitialiseContainer(client, new(), container, config);
 
                 await Task.Delay(-1);
             }

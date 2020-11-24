@@ -23,7 +23,7 @@ namespace OtterBot.Repository
             return user;
         }
 
-        public async Task<int> AddStrikes(ulong guildId, ulong userId, int strikes, string reason)
+        public async Task<int> AddStrikes(ulong guildId, ulong userId, ulong givenBy, int strikes, string reason)
         {
             var user = await GetUser(guildId, userId);
             user.Strikes += strikes;
@@ -32,6 +32,7 @@ namespace OtterBot.Repository
                 Id = Guid.NewGuid().ToString(),
                 Amount = strikes,
                 Reason = reason,
+                GivenBy = givenBy,
                 Timestamp = DateTime.UtcNow
             };
             user.StrikeMetadata.Add(metadata);
@@ -39,7 +40,7 @@ namespace OtterBot.Repository
             return user.Strikes;
         }
 
-        public async Task<int> RemoveStrikes(ulong guildId, ulong userId, int strikes, string reason)
+        public async Task<int> RemoveStrikes(ulong guildId, ulong userId, ulong givenBy, int strikes, string reason)
         {
             var user = await GetUser(guildId, userId);
             user.Strikes = Math.Max(0, user.Strikes - strikes);
@@ -48,6 +49,7 @@ namespace OtterBot.Repository
                 Id = Guid.NewGuid().ToString(),
                 Amount = strikes,
                 Reason = reason,
+                GivenBy = givenBy,
                 Timestamp = DateTime.UtcNow
             };
             user.PardonMetadata.Add(metadata);
@@ -83,6 +85,7 @@ namespace OtterBot.Repository
         public string Id { get; set; }
         public int Amount { get; set; }
         public string Reason { get; set; }
+        public ulong GivenBy { get; set; }
         public DateTime Timestamp { get; set; }
     }
 }
