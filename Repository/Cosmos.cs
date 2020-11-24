@@ -1,6 +1,7 @@
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 
@@ -27,6 +28,7 @@ namespace OtterBot.Repository
             client = new CosmosClient(config["CosmosConnectionString"]);
             database = client.CreateDatabaseIfNotExistsAsync("MainDatabase").GetAwaiter().GetResult();
             container = database.CreateContainerIfNotExistsAsync(typeof(T).Name, "/id").GetAwaiter().GetResult();
+            LoadCache().GetAwaiter().GetResult();
         }
 
         public async Task Delete(string id)
@@ -57,6 +59,16 @@ namespace OtterBot.Repository
         {
             await container.UpsertItemAsync(entity);
             cache.Set(entity.Id, entity);
+        }
+
+        public async Task LoadCache()
+        {
+            var iterator = container.GetItemLinqQueryable<T>().ToFeedIterator();
+            var results = await iterator.ReadNextAsync();
+            foreach (var result in results)
+            {
+                cache.Set(result.Id, result);
+            }
         }
     }
 

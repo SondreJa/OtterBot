@@ -1,10 +1,10 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OtterBot.Repository;
+using OtterBot.Handlers;
 using SimpleInjector;
 using System;
 using System.Threading.Tasks;
@@ -36,7 +36,8 @@ namespace OtterBot
             container.RegisterInstance(config);
 
             container.RegisterSingleton<ConfigRepo>();
-            container.RegisterSingleton<CommandHandler>();
+            container.RegisterSingleton<StrikeRepo>();
+            container.RegisterSingleton<MessageHandler>();
             container.RegisterSingleton(typeof(ICosmos<>), typeof(Cosmos<>));
 
             container.Verify();

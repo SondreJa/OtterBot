@@ -10,6 +10,9 @@ namespace OtterBot.Commands
 {
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
+        [Command("ping")]
+        public Task Ping() => ReplyAsync("Pong");
+
         [Command("echo")]
         [Summary("Echoes a message")]
         public Task Echo([Remainder][Summary("The text to echo")] string echo) => ReplyAsync(echo);

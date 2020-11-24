@@ -4,23 +4,20 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
-using System.Linq;
-using System.Text;
+using OtterBot.Constants;
 using OtterBot.Repository;
 using SimpleInjector;
 
-namespace OtterBot
+namespace OtterBot.Handlers
 {
-    public class CommandHandler
+    public class MessageHandler
     {
-        private const string Edit = "\u26A0";
-
         private readonly DiscordSocketClient client;
         private readonly CommandService commands;
         private readonly IServiceProvider services;
         private readonly ConfigRepo configRepo;
 
-        public CommandHandler(DiscordSocketClient client, CommandService commands, ConfigRepo configRepo, Container container)
+        public MessageHandler(DiscordSocketClient client, CommandService commands, ConfigRepo configRepo, Container container)
         {
             this.services = container;
             this.client = client;
@@ -29,6 +26,7 @@ namespace OtterBot
 
             client.MessageReceived += HandleCommand;
             client.MessageUpdated += HandleMessageUpdated;
+            client.MessageDeleted += HandleMessageDeleted;
             commands.AddModulesAsync(Assembly.GetEntryAssembly(), services).GetAwaiter().GetResult();
         }
 
@@ -49,7 +47,6 @@ namespace OtterBot
             }
 
             var context = new SocketCommandContext(client, message);
-
             await commands.ExecuteAsync(context, argPos, services);
         }
 
@@ -73,7 +70,29 @@ namespace OtterBot
             embed.WithDescription($"**From**: {oldMessage}\n**To**: {newMessage}");
 
             var user = socketMessage.Author;
-            var text = $"`[{DateTime.UtcNow.ToString("HH:mm:ss")}]` {Edit} **{user.Username}**#{user.Discriminator} (ID: {user.Id})'s message has been edited in <#{channel.Id}>:";
+            var text = $"`[{DateTime.UtcNow.ToString("HH:mm:ss")}]` {Emotes.Warning} **{user.Username}**#{user.Discriminator} (ID: {user.Id})'s message has been edited in <#{channel.Id}>:";
+
+            await logChannel.SendMessageAsync(text: text, embed: embed.Build());
+        }
+
+        private async Task HandleMessageDeleted(Cacheable<IMessage, ulong> cachedMessage, ISocketMessageChannel channel)
+        {
+            var old = cachedMessage.HasValue ? cachedMessage.Value : (await cachedMessage.DownloadAsync());
+            if (old.Author.IsBot)
+            {
+                return;
+            }
+
+            var context = new SocketCommandContext(client, old as SocketUserMessage);
+            var logChannelId = configRepo.GetLogChannel(context.Guild.Id);
+            var logChannel = context.Guild.GetChannel(logChannelId) as IMessageChannel;
+
+            var embed = new EmbedBuilder();
+            embed.Color = Color.Red;
+            embed.WithDescription($"**Deleted**: {old.ToString()}");
+
+            var user = old.Author;
+            var text = $"`[{DateTime.UtcNow.ToString("HH:mm:ss")}]` {Emotes.Cross} **{user.Username}**#{user.Discriminator} (ID: {user.Id})'s message has been deleted from <#{channel.Id}>:";
 
             await logChannel.SendMessageAsync(text: text, embed: embed.Build());
         }
