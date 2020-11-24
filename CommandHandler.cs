@@ -6,22 +6,26 @@ using Discord.Commands;
 using Discord.WebSocket;
 using System.Linq;
 using System.Text;
+using OtterBot.Repository;
+using SimpleInjector;
 
 namespace OtterBot
 {
     public class CommandHandler
     {
+        private const string Edit = "\u26A0";
+
         private readonly DiscordSocketClient client;
         private readonly CommandService commands;
         private readonly IServiceProvider services;
-        private readonly CustomConfig customConfig;
+        private readonly ConfigRepo configRepo;
 
-        public CommandHandler(DiscordSocketClient client, CommandService commands, IServiceProvider services, CustomConfig customConfig)
+        public CommandHandler(DiscordSocketClient client, CommandService commands, ConfigRepo configRepo, Container container)
         {
-            this.services = services;
+            this.services = container;
             this.client = client;
             this.commands = commands;
-            this.customConfig = customConfig;
+            this.configRepo = configRepo;
 
             client.MessageReceived += HandleCommand;
             client.MessageUpdated += HandleMessageUpdated;
@@ -49,21 +53,29 @@ namespace OtterBot
             await commands.ExecuteAsync(context, argPos, services);
         }
 
-        private async Task HandleMessageUpdated(Cacheable<IMessage, ulong> cachedMessage, SocketMessage socketmessage, ISocketMessageChannel channel)
+        private async Task HandleMessageUpdated(Cacheable<IMessage, ulong> cachedMessage, SocketMessage socketMessage, ISocketMessageChannel channel)
         {
+            if (socketMessage.Author.IsBot)
+            {
+                return;
+            }
+
             var old = cachedMessage.HasValue ? cachedMessage.Value : (await cachedMessage.DownloadAsync());
             var oldMessage = old.ToString();
-            var newMessage = socketmessage.ToString();
-            var channelName = channel.Name;
+            var newMessage = socketMessage.ToString();
 
-            var user = socketmessage.Author;
-            var channels = client.GetGuild(customConfig.GuildId).Channels.First(c => c.Name == customConfig.LogChannel) as IMessageChannel;
-            var sb = new StringBuilder();
-            sb.AppendLine($"`[{DateTime.UtcNow.ToString("HH:mm:ss")}]` **{user.Username}**#{user.Discriminator} (ID: {user.Id})'s message has been edited in <#{channel.Id}>:");
-            sb.Append($">>> ");
-            sb.AppendLine($"**From:** {oldMessage}");
-            sb.AppendLine($"**To:** {newMessage}");
-            await channels.SendMessageAsync(sb.ToString());
+            var context = new SocketCommandContext(client, socketMessage as SocketUserMessage);
+            var logChannelId = configRepo.GetLogChannel(context.Guild.Id);
+            var logChannel = context.Guild.GetChannel(logChannelId) as IMessageChannel;
+
+            var embed = new EmbedBuilder();
+            embed.Color = Color.Gold;
+            embed.WithDescription($"**From**: {oldMessage}\n**To**: {newMessage}");
+
+            var user = socketMessage.Author;
+            var text = $"`[{DateTime.UtcNow.ToString("HH:mm:ss")}]` {Edit} **{user.Username}**#{user.Discriminator} (ID: {user.Id})'s message has been edited in <#{channel.Id}>:";
+
+            await logChannel.SendMessageAsync(text: text, embed: embed.Build());
         }
     }
 }

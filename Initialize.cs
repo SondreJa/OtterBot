@@ -1,8 +1,10 @@
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using OtterBot.Repository;
 using SimpleInjector;
 using System;
 using System.Threading.Tasks;
@@ -22,21 +24,22 @@ namespace OtterBot
             return client;
         }
 
-        public static IServiceProvider BuildServiceProvider(DiscordSocketClient client, CommandService commands, Container container, CustomConfig customConfig)
+        public static IServiceProvider BuildServiceProvider(DiscordSocketClient client, CommandService commands, Container container, IConfigurationRoot config)
         {
             var provider = new ServiceCollection()
                     .AddSimpleInjector(container)
-                    .BuildServiceProvider();
+                    .BuildServiceProvider(validateScopes: true)
+                    .UseSimpleInjector(container);
 
             container.RegisterInstance(client);
             container.RegisterInstance(commands);
+            container.RegisterInstance(config);
+
+            container.RegisterSingleton<ConfigRepo>();
             container.RegisterSingleton<CommandHandler>();
-            container.RegisterInstance<IServiceProvider>(provider);
-            container.RegisterInstance(customConfig);
+            container.RegisterSingleton(typeof(ICosmos<>), typeof(Cosmos<>));
 
-            provider.UseSimpleInjector(container);
             container.Verify();
-
             return provider;
         }
 

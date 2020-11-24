@@ -10,6 +10,9 @@
 *.userosscache
 *.sln.docstates
 *appsettings.local.json
+*__azurite*
+*__blobstorage__
+*__queuestorage__
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

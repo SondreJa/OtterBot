@@ -9,7 +9,7 @@ namespace OtterBot
     class Program
     {
         private static DiscordSocketClient client;
-        private static Container container;
+        private static Container container = new();
 
         static async Task Main(string[] args)
         {
@@ -20,15 +20,9 @@ namespace OtterBot
                                 .AddJsonFile("appsettings.local.json", true, true);
 
                 var config = builder.Build();
-                var customConfig = new CustomConfig
-                {
-                    GuildId = config.GetValue<ulong>("GuildId"),
-                    LogChannel = config["LogChannel"]
-                };
 
                 client = await Initialize.GetClient(config);
-                container = new Container();
-                Initialize.BuildServiceProvider(client, new(), container, customConfig);
+                Initialize.BuildServiceProvider(client, new(), container, config);
 
                 await Task.Delay(-1);
             }
