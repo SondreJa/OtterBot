@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using Newtonsoft.Json;
+using OtterBot.Models;
 
 namespace OtterBot.Repository
 {
@@ -29,22 +29,6 @@ namespace OtterBot.Repository
                 config = new(guildId);
             }
             return config;
-        }
-    }
-
-    public class ConfigModel : IEntity
-    {
-        [JsonProperty("id")]
-        public string Id { get; set; }
-        public ulong LogChannel { get; set; }
-
-        public ConfigModel()
-        {
-        }
-
-        public ConfigModel(ulong guildId) : base()
-        {
-            Id = guildId.ToString();
         }
     }
 }

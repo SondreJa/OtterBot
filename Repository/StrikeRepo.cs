@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Discord.WebSocket;
 using Newtonsoft.Json;
+using OtterBot.Models;
 
 namespace OtterBot.Repository
 {
@@ -44,7 +46,7 @@ namespace OtterBot.Repository
         {
             var user = await GetUser(guildId, userId);
             user.Strikes = Math.Max(0, user.Strikes - strikes);
-            var metadata = new StrikeMetadata
+            var metadata = new PardonMetadata
             {
                 Id = Guid.NewGuid().ToString(),
                 Amount = strikes,
@@ -56,36 +58,5 @@ namespace OtterBot.Repository
             await cosmos.Upsert(user);
             return user.Strikes;
         }
-    }
-
-    public class StrikeModel : IEntity
-    {
-        [JsonProperty("id")]
-        public string Id => $"{GuildId}-{UserId}";
-        public ulong GuildId { get; set; }
-        public ulong UserId { get; set; }
-        public int Strikes { get; set; }
-        public List<StrikeMetadata> StrikeMetadata { get; set; } = new();
-        public List<StrikeMetadata> PardonMetadata { get; set; } = new();
-
-        public StrikeModel()
-        {
-
-        }
-
-        public StrikeModel(ulong guildId, ulong userId) : base()
-        {
-            GuildId = guildId;
-            UserId = userId;
-        }
-    }
-
-    public class StrikeMetadata
-    {
-        public string Id { get; set; }
-        public int Amount { get; set; }
-        public string Reason { get; set; }
-        public ulong GivenBy { get; set; }
-        public DateTime Timestamp { get; set; }
     }
 }
