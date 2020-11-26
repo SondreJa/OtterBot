@@ -32,6 +32,7 @@ namespace OtterBot
             container.RegisterSingleton<ConfigRepo>();
             container.RegisterSingleton<StrikeRepo>();
             container.RegisterSingleton<MessageHandler>();
+            container.RegisterSingleton<StrikeHandler>();
             container.RegisterSingleton(typeof(ICosmos<>), typeof(Cosmos<>));
 
             container.Verify();

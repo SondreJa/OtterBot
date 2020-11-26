@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
 using OtterBot.Constants;
+using OtterBot.Handlers;
 using OtterBot.Models;
 using OtterBot.Repository;
 using OtterBot.Utility;
@@ -15,9 +16,11 @@ namespace OtterBot.Commands
     {
         private readonly StrikeRepo strikeRepo;
         private readonly ConfigRepo configRepo;
+        private readonly StrikeHandler strikeHandler;
 
-        public StrikeModule(StrikeRepo strikeRepo, ConfigRepo configRepo)
+        public StrikeModule(StrikeRepo strikeRepo, ConfigRepo configRepo, StrikeHandler strikeHandler)
         {
+            this.strikeHandler = strikeHandler;
             this.configRepo = configRepo;
             this.strikeRepo = strikeRepo;
         }
@@ -25,34 +28,12 @@ namespace OtterBot.Commands
         [Command("strike")]
         public async Task Strike(int amount, SocketUser user, [Remainder] string reason = null)
         {
-            // reason ??= "No reason stated.";
-            // var striker = Context.Message.Author;
-            // var guildId = Context.Guild.Id;
-            // var strikeInfo = await strikeRepo.GetUser(guildId, user.Id);
-            // var oldStrikes = strikeInfo.Strikes;
-            // var strikes = await strikeRepo.AddStrikes(guildId, user.Id, striker.Id, amount, reason);
-
-            // var sb = new StringBuilder();
-            // sb.AppendLine($"{Formatter.NowBlock()} {Emotes.RedFlag} {Formatter.FullName(striker)} gave `{amount}` strikes `[{oldStrikes} → {strikes}]` to {Formatter.FullName(user, true)}");
-            // sb.AppendLine($"`[Reason]` {reason}");
-            // await ReplyAsync(sb.ToString());
             await EditStrikes(amount, user, reason, Context, isPardon: false);
         }
 
         [Command("pardon")]
         public async Task Pardon(int amount, SocketUser user, [Remainder] string reason = null)
         {
-            // reason ??= "No reason stated.";
-            // var pardoner = Context.Message.Author;
-            // var guildId = Context.Guild.Id;
-            // var strikeInfo = await strikeRepo.GetUser(guildId, user.Id);
-            // var oldStrikes = strikeInfo.Strikes;
-            // var strikes = await strikeRepo.RemoveStrikes(guildId, user.Id, pardoner.Id, amount, reason);
-
-            // var sb = new StringBuilder();
-            // sb.AppendLine($"{Formatter.NowBlock()} {Emotes.WhiteFlag} {Formatter.FullName(pardoner)} pardoned `{amount}` strikes `[{oldStrikes} → {strikes}]` from {Formatter.FullName(user, true)}");
-            // sb.AppendLine($"`[Reason]` {reason}");
-            // await ReplyAsync(sb.ToString());
             await EditStrikes(amount, user, reason, Context, isPardon: true);
         }
 
@@ -64,6 +45,7 @@ namespace OtterBot.Commands
             var strikeInfo = await strikeRepo.GetUser(guildId, user.Id);
             var oldStrikes = strikeInfo.Strikes;
             int strikes;
+            string actionMessage = null;
             if (isPardon)
             {
                 strikes = await strikeRepo.RemoveStrikes(guildId, user.Id, pardoner.Id, amount, reason);
@@ -71,12 +53,18 @@ namespace OtterBot.Commands
             else
             {
                 strikes = await strikeRepo.AddStrikes(guildId, user.Id, pardoner.Id, amount, reason);
+                var action = await configRepo.GetStrikeAction(guildId, oldStrikes, strikes);
+                actionMessage = await strikeHandler.HandleStrike(user, action);
             }
 
             var sb = new StringBuilder();
             sb.AppendLine($"{Formatter.NowBlock()} {(isPardon ? Emotes.WhiteFlag : Emotes.RedFlag)} {Formatter.FullName(pardoner)} {(isPardon ? "pardoned" : "gave")} `{amount}` strikes `[{oldStrikes} → {strikes}]` {(isPardon ? "from" : "to")} {Formatter.FullName(user, true)}");
             sb.AppendLine($"`[Reason]` {reason}");
             await ReplyAsync(sb.ToString());
+            if (actionMessage != null)
+            {
+                await ReplyAsync(actionMessage);
+            }
         }
 
         [Command("check")]

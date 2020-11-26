@@ -62,7 +62,7 @@ namespace OtterBot.Handlers
             var newMessage = socketMessage.ToString();
 
             var context = new SocketCommandContext(client, socketMessage as SocketUserMessage);
-            var logChannelId = configRepo.GetLogChannel(context.Guild.Id);
+            var logChannelId = await configRepo.GetLogChannel(context.Guild.Id);
             var logChannel = context.Guild.GetChannel(logChannelId) as IMessageChannel;
 
             var embed = new EmbedBuilder();
@@ -84,7 +84,7 @@ namespace OtterBot.Handlers
             }
 
             var context = new SocketCommandContext(client, old as SocketUserMessage);
-            var logChannelId = configRepo.GetLogChannel(context.Guild.Id);
+            var logChannelId = await configRepo.GetLogChannel(context.Guild.Id);
             var logChannel = context.Guild.GetChannel(logChannelId) as IMessageChannel;
 
             var embed = new EmbedBuilder();

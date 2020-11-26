@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Threading.Tasks;
 using OtterBot.Models;
 
@@ -12,6 +13,29 @@ namespace OtterBot.Repository
             this.cosmos = cosmos;
         }
 
+        public async Task<ulong> GetLogChannel(ulong guildId) => (await cosmos.Get(guildId.ToString())).LogChannel;
+        public async Task<StrikeAction> GetStrikeAction(ulong guildId, int oldStrikes, int strikes)
+        {
+            var config = await cosmos.Get(guildId.ToString());
+            if (config.StrikeActions.ContainsKey(strikes) && config.StrikeActions[strikes].Action != BotAction.Nothing)
+            {
+                return config.StrikeActions[strikes];
+            }
+            var possibleActions = config.StrikeActions.Where(kvp => kvp.Key > oldStrikes && kvp.Key < strikes);
+            if (!possibleActions.Any())
+            {
+                return new StrikeAction { Action = BotAction.Nothing };
+            }
+            foreach (var action in possibleActions.OrderByDescending(kvp => kvp.Key))
+            {
+                if (action.Value.Action != BotAction.Nothing)
+                {
+                    return action.Value;
+                }
+            }
+            return new StrikeAction { Action = BotAction.Nothing };
+        }
+
         public async Task SetLogChannel(ulong guildId, ulong logChannelId)
         {
             var config = await GetServerConfig(guildId);
@@ -19,7 +43,19 @@ namespace OtterBot.Repository
             await cosmos.Upsert(config);
         }
 
-        public ulong GetLogChannel(ulong guildId) => cosmos.Get(guildId.ToString()).GetAwaiter().GetResult().LogChannel;
+        public async Task SetStrikeAction(ulong guildId, int amount, StrikeAction action)
+        {
+            var config = await GetServerConfig(guildId);
+            config.StrikeActions[amount] = action;
+            await cosmos.Upsert(config);
+        }
+
+        public async Task RemoveStrikeAction(ulong guildId, int amount)
+        {
+            var config = await GetServerConfig(guildId);
+            config.StrikeActions.Remove(amount);
+            await cosmos.Upsert(config);
+        }
 
         private async Task<ConfigModel> GetServerConfig(ulong guildId)
         {

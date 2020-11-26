@@ -7,11 +7,4 @@ namespace OtterBot.Models
         public BotAction Action { get; set; }
         public TimeSpan? Length { get; set; }
     }
-
-    public enum BotAction
-    {
-        Mute,
-        Kick,
-        Ban
-    }
 }

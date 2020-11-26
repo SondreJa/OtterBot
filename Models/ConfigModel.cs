@@ -9,7 +9,7 @@ namespace OtterBot.Models
         [JsonProperty("id")]
         public string Id { get; set; }
         public ulong LogChannel { get; set; }
-        public Dictionary<int, StrikeAction> StrikeActions { get; set; }
+        public Dictionary<int, StrikeAction> StrikeActions { get; set; } = new();
 
         public ConfigModel()
         {
