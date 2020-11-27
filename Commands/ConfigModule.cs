@@ -2,15 +2,16 @@ using System;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord.Commands;
+using Discord;
+using Discord.WebSocket;
 using OtterBot.Models;
 using OtterBot.Repository;
+using OtterBot.Utility;
 
 namespace OtterBot.Commands
 {
     public class ConfigModule : ModuleBase<SocketCommandContext>
     {
-        private const string SpanPattern = @"(\d+)([wdhms])";
-        private static readonly string[] ValidTimeIntervals = new[] { "w", "d", "h", "m", "s" };
         private readonly ConfigRepo repo;
         public ConfigModule(ConfigRepo repo)
         {
@@ -18,10 +19,24 @@ namespace OtterBot.Commands
         }
 
         [Command("setlogchannel")]
-        public async Task SetLogChannel()
+        public async Task SetLogChannel(SocketTextChannel channel)
         {
-            await repo.SetLogChannel(Context.Guild.Id, Context.Channel.Id);
+            await repo.SetLogChannel(Context.Guild.Id, channel.Id);
             await ReplyAsync("Log channel set");
+        }
+
+        [Command("setbotchannel")]
+        public async Task SetBotChannel(SocketTextChannel channel)
+        {
+            await repo.SetBotChannel(Context.Guild.Id, channel.Id);
+            await ReplyAsync("Bot channel set");
+        }
+
+        [Command("setmutedrole")]
+        public async Task SetMutedRole(SocketRole role)
+        {
+            await repo.SetMutedRole(Context.Guild.Id, role.Id);
+            await ReplyAsync("Muted role set");
         }
 
         [Command("setstrike")]
@@ -37,7 +52,7 @@ namespace OtterBot.Commands
                 await ReplyAsync($"Unable to determine action from '{action}'");
                 return;
             }
-            if (!TryParseToSpan(length, out var span))
+            if (!Parser.TryParseToSpan(length, out var span))
             {
                 await ReplyAsync($"Unable to determine length of action from '{length}'");
                 return;
@@ -53,38 +68,5 @@ namespace OtterBot.Commands
             await repo.RemoveStrikeAction(Context.Guild.Id, amount);
             await ReplyAsync($"Strike action cleared for {amount} strikes(s)");
         }
-
-        private bool TryParseToSpan(string length, out TimeSpan? span)
-        {
-            span = null;
-            if (length != null)
-            {
-                if (!Regex.IsMatch(length, SpanPattern))
-                {
-                    return false;
-                }
-                span = new TimeSpan();
-                var matches = Regex.Matches(length, SpanPattern);
-                foreach (Match match in matches)
-                {
-                    var captures = match.Groups;
-                    var intervalInt = int.Parse(captures[1].Value);
-                    var addSpan = SwitchOnInterval(intervalInt, captures[2].Value);
-                    span = span.Value.Add(addSpan);
-                }
-            }
-            return true;
-        }
-
-        private TimeSpan SwitchOnInterval(int length, string interval) =>
-            interval switch
-            {
-                "w" => new TimeSpan((length * 7), 0, 0, 0),
-                "d" => new TimeSpan(length, 0, 0, 0),
-                "h" => new TimeSpan(length, 0, 0),
-                "m" => new TimeSpan(0, length, 0),
-                "s" => new TimeSpan(0, 0, length),
-                _ => throw new ArgumentException("Invalid interval passed")
-            };
     }
 }

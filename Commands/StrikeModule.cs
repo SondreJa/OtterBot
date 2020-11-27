@@ -54,7 +54,7 @@ namespace OtterBot.Commands
             {
                 strikes = await strikeRepo.AddStrikes(guildId, user.Id, pardoner.Id, amount, reason);
                 var action = await configRepo.GetStrikeAction(guildId, oldStrikes, strikes);
-                actionMessage = await strikeHandler.HandleStrike(user, action);
+                actionMessage = await strikeHandler.HandleStrike(context.Guild, user as SocketGuildUser, action);
             }
 
             var sb = new StringBuilder();

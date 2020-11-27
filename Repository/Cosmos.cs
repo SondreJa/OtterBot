@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
@@ -11,6 +14,7 @@ namespace OtterBot.Repository
     public interface ICosmos<T> where T : class, IEntity, new()
     {
         Task<T> Get(string id);
+        Task<IEnumerable<T>> GetMany(Func<T, bool> predicate);
         Task Upsert(T entity);
         Task Delete(string id);
     }
@@ -53,6 +57,16 @@ namespace OtterBot.Repository
             {
                 return null;
             }
+        }
+
+        public async Task<IEnumerable<T>> GetMany(Func<T, bool> predicate)
+        {
+            var queryable = container.GetItemLinqQueryable<T>();
+            // For some reason querable.Where doesn't return an IQueryable, and won't let me run ToFeedIterator on it, so until that is solved we'll have to do in memory filtering which sucks
+            var iterator = queryable;
+            var feed = iterator.ToFeedIterator<T>();
+            // See above
+            return (await feed.ReadNextAsync()).Where(predicate);
         }
 
         public async Task Upsert(T entity)

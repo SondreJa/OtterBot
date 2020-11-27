@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using Microsoft.Extensions.Configuration;
+using OtterBot.Handlers;
 using SimpleInjector;
 
 namespace OtterBot
@@ -24,7 +25,12 @@ namespace OtterBot
                 client = await Initialiser.InitialiseDiscordClient(config);
                 Initialiser.InitialiseContainer(client, new(), container, config);
 
-                await Task.Delay(-1);
+                while (true)
+                {
+                    var handler = container.GetInstance<ScheduleHandler>();
+                    await handler.RunScheduledTasks();
+                    await Task.Delay(60_000);
+                }
             }
             catch (Exception e)
             {

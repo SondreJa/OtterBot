@@ -15,7 +15,7 @@ namespace OtterBot
         public static async Task<DiscordSocketClient> InitialiseDiscordClient(IConfigurationRoot config)
         {
             var token = config["Token"];
-            var discordConfig = new DiscordSocketConfig { MessageCacheSize = 100 };
+            var discordConfig = new DiscordSocketConfig { MessageCacheSize = 100, AlwaysDownloadUsers = true };
             var client = new DiscordSocketClient(discordConfig);
             client.Log += Log;
             await client.LoginAsync(TokenType.Bot, token);
@@ -31,8 +31,13 @@ namespace OtterBot
 
             container.RegisterSingleton<ConfigRepo>();
             container.RegisterSingleton<StrikeRepo>();
+            container.RegisterSingleton<MuteRepo>();
+
             container.RegisterSingleton<MessageHandler>();
             container.RegisterSingleton<StrikeHandler>();
+            container.RegisterSingleton<MuteHandler>();
+            container.RegisterSingleton<ScheduleHandler>();
+
             container.RegisterSingleton(typeof(ICosmos<>), typeof(Cosmos<>));
 
             container.Verify();

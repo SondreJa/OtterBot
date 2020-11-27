@@ -7,8 +7,11 @@ namespace OtterBot.Models
     public class ConfigModel : IEntity
     {
         [JsonProperty("id")]
-        public string Id { get; set; }
-        public ulong LogChannel { get; set; }
+        public string Id => GuildId.ToString();
+        public ulong GuildId { get; set; }
+        public ulong? LogChannel { get; set; }
+        public ulong? BotChannel { get; set; }
+        public ulong? MutedRole { get; set; }
         public Dictionary<int, StrikeAction> StrikeActions { get; set; } = new();
 
         public ConfigModel()
@@ -17,7 +20,7 @@ namespace OtterBot.Models
 
         public ConfigModel(ulong guildId) : base()
         {
-            Id = guildId.ToString();
+            GuildId = guildId;
         }
     }
 }

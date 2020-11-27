@@ -21,6 +21,7 @@ namespace OtterBot.Repository
             if (user == null)
             {
                 user = new(guildId, userId);
+                await cosmos.Upsert(user);
             }
             return user;
         }

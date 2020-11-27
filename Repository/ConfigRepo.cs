@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using OtterBot.Models;
@@ -12,8 +13,11 @@ namespace OtterBot.Repository
         {
             this.cosmos = cosmos;
         }
+        public async Task<IEnumerable<ulong>> GetAllGuilds() => (await cosmos.GetMany(_ => true)).Select(c => c.GuildId);
+        public async Task<ulong?> GetLogChannel(ulong guildId) => (await cosmos.Get(guildId.ToString())).LogChannel;
+        public async Task<ulong?> GetBotChannel(ulong guildId) => (await cosmos.Get(guildId.ToString())).BotChannel;
+        public async Task<ulong?> GetMutedRole(ulong guildId) => (await cosmos.Get(guildId.ToString())).MutedRole;
 
-        public async Task<ulong> GetLogChannel(ulong guildId) => (await cosmos.Get(guildId.ToString())).LogChannel;
         public async Task<StrikeAction> GetStrikeAction(ulong guildId, int oldStrikes, int strikes)
         {
             var config = await cosmos.Get(guildId.ToString());
@@ -40,6 +44,20 @@ namespace OtterBot.Repository
         {
             var config = await GetServerConfig(guildId);
             config.LogChannel = logChannelId;
+            await cosmos.Upsert(config);
+        }
+
+        public async Task SetBotChannel(ulong guildId, ulong botChannelId)
+        {
+            var config = await GetServerConfig(guildId);
+            config.BotChannel = botChannelId;
+            await cosmos.Upsert(config);
+        }
+
+        public async Task SetMutedRole(ulong guildId, ulong mutedRole)
+        {
+            var config = await GetServerConfig(guildId);
+            config.MutedRole = mutedRole;
             await cosmos.Upsert(config);
         }
 
