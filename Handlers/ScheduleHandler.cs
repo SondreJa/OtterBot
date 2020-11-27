@@ -35,6 +35,8 @@ namespace OtterBot.Handlers
                 return;
             }
 
+            var x = guild.IsSynced;
+            await guild.SyncPromise;
             var botChannelId = await configRepo.GetBotChannel(guildId);
             if (!botChannelId.HasValue)
             {
