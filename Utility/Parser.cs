@@ -6,7 +6,6 @@ namespace OtterBot.Utility
     public class Parser
     {
         private const string SpanPattern = @"(\d+)([wdhms])";
-        private static readonly string[] ValidTimeIntervals = new[] { "w", "d", "h", "m", "s" };
 
         public static bool TryParseToSpan(string length, out TimeSpan? span)
         {

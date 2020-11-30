@@ -32,6 +32,8 @@ namespace OtterBot.Commands
         public async Task Strike(int amount, SocketUser user, [Remainder] string reason = null)
         {
             await EditStrikes(amount, user, reason, Context, isPardon: false);
+            var dmChannel = await user.GetOrCreateDMChannelAsync();
+            await dmChannel.SendMessageAsync($"You have received {amount} strike(s) for: {reason}");
         }
 
         [Command("pardon")]
