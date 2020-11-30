@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using Discord.WebSocket;
 using OtterBot.Repository;
 using Discord;
+using Dasync.Collections;
 
 namespace OtterBot.Handlers
 {
@@ -21,10 +22,10 @@ namespace OtterBot.Handlers
         public async Task RunScheduledTasks()
         {
             var guilds = await configRepo.GetAllGuilds();
-            foreach (var guild in guilds)
+            await guilds.ParallelForEachAsync(async guild =>
             {
                 await RunScheduledTasks(guild);
-            }
+            });
         }
 
         public async Task RunScheduledTasks(ulong guildId)
@@ -35,7 +36,6 @@ namespace OtterBot.Handlers
                 return;
             }
 
-            var x = guild.IsSynced;
             await guild.SyncPromise;
             var botChannelId = await configRepo.GetBotChannel(guildId);
             if (!botChannelId.HasValue)

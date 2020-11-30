@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,9 +18,11 @@ namespace OtterBot.Commands
         private readonly StrikeRepo strikeRepo;
         private readonly ConfigRepo configRepo;
         private readonly StrikeHandler strikeHandler;
+        private readonly MuteRepo muteRepo;
 
-        public StrikeModule(StrikeRepo strikeRepo, ConfigRepo configRepo, StrikeHandler strikeHandler)
+        public StrikeModule(StrikeRepo strikeRepo, ConfigRepo configRepo, StrikeHandler strikeHandler, MuteRepo muteRepo)
         {
+            this.muteRepo = muteRepo;
             this.strikeHandler = strikeHandler;
             this.configRepo = configRepo;
             this.strikeRepo = strikeRepo;
@@ -68,28 +71,41 @@ namespace OtterBot.Commands
         }
 
         [Command("check")]
-        public async Task Check(SocketUser user)
+        public async Task Check(SocketUser user, bool withHistory = false)
         {
             var guild = Context.Guild;
             var strikeInfo = await strikeRepo.GetUser(guild.Id, user.Id);
             var sb = new StringBuilder();
+
             sb.AppendLine($"{Emotes.Magnifying} Moderation information for **{user.Username}**#{user.Discriminator} (ID:{user.Id}):");
             sb.AppendLine($"{Emotes.RedFlag} Strikes: **{strikeInfo.Strikes}**");
-            if (strikeInfo.StrikeMetadata.Any())
+
+            var muteInfo = await muteRepo.GetUser(guild.Id, user.Id);
+            sb.AppendLine($"{Emotes.Muted} Muted: **{(muteInfo.IsMuted ? "Yes" : "No")}**");
+            if (muteInfo.IsMuted)
             {
-                sb.AppendLine($"{Emotes.RedBook} Latest strike history:");
-                var history = GetHistory(user, 5, "strike", strikeInfo.StrikeMetadata, guild);
-                sb.AppendLine(history);
+                var until = muteInfo.MutedUntil == null ? "Indefinite" : Formatter.TimespanToString(muteInfo.MutedUntil.Value - DateTime.UtcNow);
+                sb.AppendLine($"{Emotes.ZippedMouth} Mute Time Remaining: **{until}**");
             }
-            if (strikeInfo.PardonMetadata.Any())
+
+            if (withHistory)
             {
-                sb.AppendLine($"{Emotes.GreenBook} Latest pardon history:");
-                var history = GetHistory(user, 5, "pardon", strikeInfo.PardonMetadata, guild);
-                sb.AppendLine(history);
-            }
-            if (!strikeInfo.StrikeMetadata.Any() && !strikeInfo.PardonMetadata.Any())
-            {
-                sb.AppendLine($"{Emotes.BlueBook} No strike history found");
+                if (strikeInfo.StrikeMetadata.Any())
+                {
+                    sb.AppendLine($"{Emotes.RedBook} Latest strike history:");
+                    var history = GetHistory(user, 5, "strike", strikeInfo.StrikeMetadata, guild);
+                    sb.AppendLine(history);
+                }
+                if (strikeInfo.PardonMetadata.Any())
+                {
+                    sb.AppendLine($"{Emotes.GreenBook} Latest pardon history:");
+                    var history = GetHistory(user, 5, "pardon", strikeInfo.PardonMetadata, guild);
+                    sb.AppendLine(history);
+                }
+                if (!strikeInfo.StrikeMetadata.Any() && !strikeInfo.PardonMetadata.Any())
+                {
+                    sb.AppendLine($"{Emotes.BlueBook} No strike history found");
+                }
             }
             await ReplyAsync(sb.ToString());
         }

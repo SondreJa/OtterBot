@@ -10,5 +10,7 @@ namespace OtterBot.Constants
         public const string GreenBook = "\uD83D\uDCD7"; //📗
         public const string BlueBook = "\uD83D\uDCD8"; //📘
         public const string Magnifying = "\uD83D\uDD0E"; // 🔎
+        public const string Muted = "\uD83D\uDD07"; // 🔇
+        public const string ZippedMouth = "\uD83E\uDD10"; // 🤐
     }
 }
