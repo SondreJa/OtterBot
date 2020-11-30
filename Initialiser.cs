@@ -37,6 +37,7 @@ namespace OtterBot
             container.RegisterSingleton<StrikeHandler>();
             container.RegisterSingleton<MuteHandler>();
             container.RegisterSingleton<ScheduleHandler>();
+            container.RegisterSingleton<UserHandler>();
 
             container.RegisterSingleton(typeof(ICosmos<>), typeof(Cosmos<>));
 

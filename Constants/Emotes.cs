@@ -12,5 +12,7 @@ namespace OtterBot.Constants
         public const string Magnifying = "\uD83D\uDD0E"; // 🔎
         public const string Muted = "\uD83D\uDD07"; // 🔇
         public const string ZippedMouth = "\uD83E\uDD10"; // 🤐
+        public const string Inbox = "\uD83D\uDCE5"; // 📥
+        public const string Outbox = "\uD83D\uDCE4"; // 📤
     }
 }

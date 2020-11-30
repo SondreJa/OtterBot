@@ -6,6 +6,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using OtterBot.Constants;
 using OtterBot.Repository;
+using OtterBot.Utility;
 using SimpleInjector;
 
 namespace OtterBot.Handlers
@@ -74,7 +75,7 @@ namespace OtterBot.Handlers
             embed.WithDescription($"**From**: {oldMessage}\n**To**: {newMessage}");
 
             var user = socketMessage.Author;
-            var text = $"`[{DateTime.UtcNow.ToString("HH:mm:ss")}]` {Emotes.Warning} **{user.Username}**#{user.Discriminator} (ID: {user.Id})'s message has been edited in <#{channel.Id}>:";
+            var text = $"{Formatter.NowBlock()} {Emotes.Warning} **{user.Username}**#{user.Discriminator} (ID: {user.Id})'s message has been edited in <#{channel.Id}>:";
 
             await logChannel.SendMessageAsync(text: text, embed: embed.Build());
         }
@@ -100,7 +101,7 @@ namespace OtterBot.Handlers
             embed.WithDescription($"**Deleted**: {old.ToString()}");
 
             var user = old.Author;
-            var text = $"`[{DateTime.UtcNow.ToString("HH:mm:ss")}]` {Emotes.Cross} **{user.Username}**#{user.Discriminator} (ID: {user.Id})'s message has been deleted from <#{channel.Id}>:";
+            var text = $"{Formatter.NowBlock()} {Emotes.Cross} **{user.Username}**#{user.Discriminator} (ID: {user.Id})'s message has been deleted from <#{channel.Id}>:";
 
             await logChannel.SendMessageAsync(text: text, embed: embed.Build());
         }
