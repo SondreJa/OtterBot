@@ -1,12 +1,12 @@
 using System;
 using System.Text;
-using Discord.WebSocket;
+using Discord;
 
 namespace OtterBot.Utility
 {
     public class Formatter
     {
-        public static string FullName(SocketUser user, bool withId = false)
+        public static string FullName(IUser user, bool withId = false)
         {
             var sb = new StringBuilder();
             sb.Append($"**{user.Username}**#{user.Discriminator}");

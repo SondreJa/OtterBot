@@ -14,5 +14,6 @@ namespace OtterBot.Constants
         public const string ZippedMouth = "\uD83E\uDD10"; // 🤐
         public const string Inbox = "\uD83D\uDCE5"; // 📥
         public const string Outbox = "\uD83D\uDCE4"; // 📤
+        public const string Hammer = "\uD83D\uDD28"; // 🔨
     }
 }
