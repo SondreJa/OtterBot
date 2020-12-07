@@ -31,10 +31,15 @@ namespace OtterBot.Handlers
                 return $"Unable to parse length of ban from {length}";
             }
 
-            await banRepo.Ban(guild.Id, userId, span);
+            return await Ban(guild, userId, span);
+        }
+
+        public async Task<string> Ban(SocketGuild guild, ulong userId, TimeSpan? length = null)
+        {
+            await banRepo.Ban(guild.Id, userId, length);
             await guild.AddBanAsync(userId);
             var user = guild.GetUser(userId);
-            return $"{Formatter.FullName(user, true)} banned{(span.HasValue ? $" for{Formatter.TimespanToString(span.Value)}" : string.Empty)}.";
+            return $"{Formatter.FullName(user, true)} banned{(length.HasValue ? $" for{Formatter.TimespanToString(length.Value)}" : string.Empty)}.";
         }
 
         public async Task<string> Unban(SocketGuild guild, ulong userId)

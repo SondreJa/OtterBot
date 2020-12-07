@@ -1,5 +1,3 @@
-using System;
-using System.Text;
 using System.Threading.Tasks;
 using Discord.WebSocket;
 using OtterBot.Models;
@@ -11,8 +9,13 @@ namespace OtterBot.Handlers
     public class StrikeHandler
     {
         private readonly ConfigRepo configRepo;
-        public StrikeHandler(ConfigRepo configRepo)
+        private readonly MuteHandler muteHandler;
+        private readonly BanHandler banHandler;
+
+        public StrikeHandler(ConfigRepo configRepo, MuteHandler muteHandler, BanHandler banHandler)
         {
+            this.banHandler = banHandler;
+            this.muteHandler = muteHandler;
             this.configRepo = configRepo;
         }
 
@@ -21,17 +24,12 @@ namespace OtterBot.Handlers
             switch (action.Action)
             {
                 case BotAction.Mute:
-                    var mutedRole = await configRepo.GetMutedRole(guild.Id);
-                    if (mutedRole == null)
-                    {
-                        return $"No muted role configured";
-                    }
-                    await user.AddRoleAsync(guild.GetRole(mutedRole.Value));
-                    return $"Muting {Formatter.FullName(user, true)}{(action.Length.HasValue ? $" for{Formatter.TimespanToString(action.Length.Value)}" : string.Empty)}.";
+                    return await muteHandler.Mute(guild, user, action.Length);
                 case BotAction.Kick:
+                    await user.KickAsync();
                     return $"Kicking {Formatter.FullName(user, true)}.";
                 case BotAction.Ban:
-                    return $"Banning {Formatter.FullName(user, true)}{(action.Length.HasValue ? $" for{Formatter.TimespanToString(action.Length.Value)}" : string.Empty)}.";
+                    return await banHandler.Ban(guild, user.Id, action.Length);
                 case BotAction.Nothing:
                 default:
                     return string.Empty;

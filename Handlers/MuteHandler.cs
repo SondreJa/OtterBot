@@ -21,6 +21,17 @@ namespace OtterBot.Handlers
 
         public async Task<string> Mute(SocketGuild guild, SocketGuildUser user, string length = null)
         {
+            TimeSpan? span = null;
+            if (length != null && !Parser.TryParseToSpan(length, out span))
+            {
+                return $"Unable to parse length of mute from {length}";
+            }
+
+            return await Mute(guild, user, span);
+        }
+
+        public async Task<string> Mute(SocketGuild guild, SocketGuildUser user, TimeSpan? length = null)
+        {
             var mutedRoleId = await configRepo.GetMutedRole(guild.Id);
             var mutedRole = mutedRoleId.HasValue ? guild.GetRole(mutedRoleId.Value) : null;
             if (mutedRole == null)
@@ -28,15 +39,9 @@ namespace OtterBot.Handlers
                 return "No muted role configured.";
             }
 
-            TimeSpan? span = null;
-            if (length != null && !Parser.TryParseToSpan(length, out span))
-            {
-                return $"Unable to parse length of mute from {length}";
-            }
-
             await user.AddRoleAsync(mutedRole);
-            await muteRepo.Mute(guild.Id, user.Id, span);
-            return $"{Formatter.FullName(user, true)} muted{(span.HasValue ? $" for{Formatter.TimespanToString(span.Value)}" : string.Empty)}.";
+            await muteRepo.Mute(guild.Id, user.Id, length);
+            return $"{Formatter.FullName(user, true)} muted{(length.HasValue ? $" for{Formatter.TimespanToString(length.Value)}" : string.Empty)}.";
         }
 
         public async Task<string> Unmute(SocketGuild guild, SocketGuildUser user)
